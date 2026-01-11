@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   StyleSheet, 
@@ -12,8 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome6 } from '@expo/vector-icons';
-// Fixed: replaced non-existent ScaleInCenter with ZoomIn
-import Animated, { FadeInUp, FadeIn, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addAddress, updateAddress, deleteAddress } from '../store/slices/addressSlice';
 import { Address } from '../types';
@@ -74,7 +72,11 @@ const Addresses = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={true}
+      >
         {addresses.map((addr, idx) => (
           <Animated.View 
             key={addr.id}
@@ -118,10 +120,8 @@ const Addresses = () => {
         )}
       </ScrollView>
 
-      {/* Add/Edit Modal */}
       <Modal visible={isAdding || !!editingId} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          {/* Fixed: replaced non-existent ScaleInCenter with ZoomIn */}
           <Animated.View entering={ZoomIn} style={styles.modalContent}>
             <Text style={styles.modalTitle}>{editingId ? 'Edit Address' : 'New Address'}</Text>
             
@@ -185,11 +185,12 @@ const Addresses = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollView: { flex: 1 },
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', justifyContent: 'space-between' },
   backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 22, fontWeight: '900', color: '#111827' },
   addBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F97316', justifyContent: 'center', alignItems: 'center' },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 20, flexGrow: 1, paddingBottom: 60 },
   addressCard: { backgroundColor: 'white', borderRadius: 25, padding: 20, flexDirection: 'row', alignItems: 'center', marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   cardIcon: { width: 48, height: 48, backgroundColor: '#F9FAFB', borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   cardInfo: { flex: 1 },

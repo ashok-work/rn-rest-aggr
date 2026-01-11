@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   StyleSheet, 
@@ -42,7 +41,11 @@ const Favorites = () => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={true}
+      >
         {favoriteRestaurants.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIcon}>
@@ -89,12 +92,13 @@ const Favorites = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollView: { flex: 1 },
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white' },
   backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   headerTitle: { fontSize: 22, fontWeight: '900', color: '#111827', flex: 1 },
   countBadge: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#F3F4F6', borderRadius: 10 },
   countText: { fontSize: 12, fontWeight: '900', color: '#6B7280' },
-  scrollContent: { padding: 15 },
+  scrollContent: { padding: 20, flexGrow: 1, paddingBottom: 60 },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 100, paddingHorizontal: 30 },
   emptyIcon: { width: 80, height: 80, backgroundColor: '#FEF2F2', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 25 },
   emptyTitle: { fontSize: 24, fontWeight: '900', color: '#111827', marginBottom: 10 },
@@ -102,7 +106,7 @@ const styles = StyleSheet.create({
   exploreBtn: { backgroundColor: '#F97316', paddingHorizontal: 30, paddingVertical: 18, borderRadius: 20, shadowColor: '#F97316', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 15 },
   exploreBtnText: { color: 'white', fontWeight: '900', fontSize: 16 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 15 },
-  cardWrapper: { width: (width - 45) / 2, marginBottom: 20 },
+  cardWrapper: { width: (width - 55) / 2, marginBottom: 20 },
   imageContainer: { width: '100%', aspectRatio: 1, borderRadius: 25, overflow: 'hidden', backgroundColor: '#E5E7EB', position: 'relative' },
   image: { width: '100%', height: '100%' },
   favBtnWrapper: { position: 'absolute', top: 10, left: 10 },

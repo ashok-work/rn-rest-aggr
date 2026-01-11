@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
@@ -14,8 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FontAwesome6 } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import { addReview } from '../store/slices/reviewSlice';
@@ -57,7 +55,6 @@ const Menu = () => {
   const navigation = useNavigation<any>();
   const { id } = route.params;
   const dispatch = useAppDispatch();
-  const cartItems = useAppSelector((state) => state.cart.items);
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const allReviews = useAppSelector((state) => state.reviews.reviews);
   
@@ -122,7 +119,7 @@ const Menu = () => {
     <View style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Banner */}
@@ -305,7 +302,7 @@ const Menu = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 120, flexGrow: 1 },
+  scrollContent: { paddingBottom: 150, flexGrow: 1 },
   banner: { height: 350, position: 'relative' },
   bannerImage: { width: '100%', height: '100%' },
   bannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },

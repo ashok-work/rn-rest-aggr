@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   StyleSheet, 
@@ -36,7 +35,7 @@ const Home = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView 
         style={styles.scrollView}
-        showsVerticalScrollIndicator={false} 
+        showsVerticalScrollIndicator={true} 
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}
@@ -150,7 +149,7 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 100, flexGrow: 1 },
+  scrollContent: { paddingBottom: 120, flexGrow: 1 },
   horizontalScroll: { flexGrow: 0 },
   header: { paddingHorizontal: 20, paddingBottom: 15, paddingTop: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   greeting: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' },

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   StyleSheet, 
@@ -60,7 +59,11 @@ const OrderDetails = () => {
         <Text style={styles.title}>Order #{order.id.split('-')[1]}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={true}
+      >
         {!isCancelled && (
           <View style={styles.trackerCard}>
             <View style={styles.trackRow}>
@@ -150,10 +153,11 @@ const OrderDetails = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollView: { flex: 1 },
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white' },
   backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   title: { fontSize: 22, fontWeight: '900', color: '#111827' },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 20, flexGrow: 1, paddingBottom: 60 },
   trackerCard: { backgroundColor: 'white', borderRadius: 30, padding: 30, marginBottom: 20 },
   trackRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 },
   stepContainer: { alignItems: 'center', flex: 1 },

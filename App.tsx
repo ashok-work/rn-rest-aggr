@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider } from 'react-redux';
@@ -8,6 +8,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setUser } from './store/slices/authSlice';
+import { setOrders } from './store/slices/orderSlice';
+import { setAddresses } from './store/slices/addressSlice';
+import { setReviews } from './store/slices/reviewSlice';
+import { setFavorites } from './store/slices/favoriteSlice';
 import { useAppDispatch } from './store/hooks';
 
 // Pages
@@ -32,19 +36,28 @@ const NavigationContent = () => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const hydrateAuth = async () => {
+    const hydrateAllState = async () => {
       try {
-        const userStr = await AsyncStorage.getItem('user');
-        if (userStr) {
-          dispatch(setUser(JSON.parse(userStr)));
-        }
+        const [user, orders, addresses, reviews, favorites] = await Promise.all([
+          AsyncStorage.getItem('user'),
+          AsyncStorage.getItem('orders'),
+          AsyncStorage.getItem('addresses'),
+          AsyncStorage.getItem('reviews'),
+          AsyncStorage.getItem('favorites'),
+        ]);
+
+        if (user) dispatch(setUser(JSON.parse(user)));
+        if (orders) dispatch(setOrders(JSON.parse(orders)));
+        if (addresses) dispatch(setAddresses(JSON.parse(addresses)));
+        if (reviews) dispatch(setReviews(JSON.parse(reviews)));
+        if (favorites) dispatch(setFavorites(JSON.parse(favorites)));
       } catch (e) {
-        console.error("Failed to restore session", e);
+        console.error("Failed to restore session state", e);
       } finally {
         setIsReady(true);
       }
     };
-    hydrateAuth();
+    hydrateAllState();
   }, [dispatch]);
 
   if (!isReady) {
@@ -52,9 +65,8 @@ const NavigationContent = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.rootContainer}>
       <NavigationContainer>
-        {/* Added id prop to satisfy TypeScript requirement for this navigator overload */}
         <Stack.Navigator 
           id="MainStack"
           initialRouteName="Home"
@@ -86,12 +98,20 @@ const NavigationContent = () => {
 const App: React.FC = () => {
   return (
     <Provider store={store}>
-      <SafeAreaProvider style={{ flex: 1 }}>
+      <SafeAreaProvider>
         <StatusBar style="dark" />
         <NavigationContent />
       </SafeAreaProvider>
     </Provider>
   );
 };
+
+const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    height: '100%',
+    width: '100%',
+  }
+});
 
 export default App;

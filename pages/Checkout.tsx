@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
@@ -76,7 +75,11 @@ const Checkout = () => {
         <Text style={styles.title}>Review & Pay</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={true}
+      >
         {/* Address */}
         <Animated.View entering={FadeInDown} style={styles.card}>
           <View style={styles.cardHeader}>
@@ -179,7 +182,6 @@ const Checkout = () => {
             <Text style={styles.placeBtnText}>Confirm Order</Text>
           )}
         </TouchableOpacity>
-        <View style={{ height: 50 }} />
       </ScrollView>
 
       {/* Simple Address Picker */}
@@ -209,10 +211,11 @@ const Checkout = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollView: { flex: 1 },
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white' },
   backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   title: { fontSize: 24, fontWeight: '900', color: '#111827' },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 20, flexGrow: 1, paddingBottom: 60 },
   card: { backgroundColor: 'white', borderRadius: 25, padding: 25, marginBottom: 15 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
   cardTitle: { fontSize: 16, fontWeight: '900', color: '#111827' },

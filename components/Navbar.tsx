@@ -1,84 +1,98 @@
 
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { logout } from '../store/slices/authSlice';
+import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome6 } from '@expo/vector-icons';
+import { useAppSelector } from '../store/hooks';
 
 const Navbar: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigation = useNavigation<any>();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
-  if (['/login', '/register', '/forgot-password', '/reset-password'].includes(location.pathname)) {
-    return null;
-  }
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
-
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm px-4 md:px-10 h-16 flex items-center justify-between">
-      <Link to="/" className="flex items-center space-x-2">
-        <div className="bg-orange-500 p-2 rounded-lg">
-          <i className="fas fa-utensils text-white"></i>
-        </div>
-        <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">BiteDash</span>
-      </Link>
+    <View style={styles.container}>
+      <TouchableOpacity 
+        style={styles.logoContainer} 
+        onPress={() => navigation.navigate('Home')}
+      >
+        <View style={styles.logoIcon}>
+          <FontAwesome6 name="utensils" size={16} color="white" />
+        </View>
+        <Text style={styles.logoText}>BiteDash</Text>
+      </TouchableOpacity>
 
-      <div className="hidden md:flex items-center space-x-8">
-        <Link to="/" className={`text-sm font-medium ${location.pathname === '/' ? 'text-orange-600' : 'text-gray-600 hover:text-orange-600'}`}>Home</Link>
-        <Link to="/favorites" className={`text-sm font-medium ${location.pathname === '/favorites' ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}>
-          <i className="fas fa-heart mr-1"></i> Favorites
-        </Link>
-        <Link to="/orders" className={`text-sm font-medium ${location.pathname === '/orders' ? 'text-orange-600' : 'text-gray-600 hover:text-orange-600'}`}>Orders</Link>
+      <View style={styles.actions}>
         {isAuthenticated ? (
-          <div className="flex items-center space-x-4">
-            <Link to="/account" className="flex items-center space-x-2 text-sm text-gray-700 hover:text-orange-600">
-              <img src={user?.avatar} className="w-8 h-8 rounded-full border border-gray-200" alt="Profile" />
-              <span className="font-semibold">{user?.name}</span>
-            </Link>
-            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-red-600 transition-colors">
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
-          </div>
+          <TouchableOpacity 
+            style={styles.profileBtn}
+            onPress={() => navigation.navigate('Account')}
+          >
+            <Image source={{ uri: user?.avatar }} style={styles.avatar} />
+          </TouchableOpacity>
         ) : (
-          <Link to="/login" className="px-5 py-2 bg-orange-500 text-white text-sm font-semibold rounded-full hover:bg-orange-600 transition-all shadow-md">Login</Link>
+          <TouchableOpacity 
+            style={styles.loginBtn}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.loginBtnText}>Login</Text>
+          </TouchableOpacity>
         )}
-      </div>
-
-      {/* Mobile Nav Top */}
-      <div className="md:hidden flex space-x-4 items-center">
-        {isAuthenticated && (
-           <Link to="/account">
-              <img src={user?.avatar} className="w-8 h-8 rounded-full border border-gray-200" alt="Profile" />
-           </Link>
-        )}
-      </div>
-      
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-3 z-50">
-        <Link to="/" className={`flex flex-col items-center text-xs space-y-1 ${location.pathname === '/' ? 'text-orange-600' : 'text-gray-400'}`}>
-          <i className="fas fa-home text-lg"></i>
-          <span>Home</span>
-        </Link>
-        <Link to="/favorites" className={`flex flex-col items-center text-xs space-y-1 ${location.pathname === '/favorites' ? 'text-red-500' : 'text-gray-400'}`}>
-          <i className="fas fa-heart text-lg"></i>
-          <span>Favs</span>
-        </Link>
-        <Link to="/orders" className={`flex flex-col items-center text-xs space-y-1 ${location.pathname.startsWith('/orders') ? 'text-orange-600' : 'text-gray-400'}`}>
-          <i className="fas fa-receipt text-lg"></i>
-          <span>Orders</span>
-        </Link>
-        <Link to="/account" className={`flex flex-col items-center text-xs space-y-1 ${location.pathname === '/account' ? 'text-orange-600' : 'text-gray-400'}`}>
-          <i className="fas fa-user text-lg"></i>
-          <span>Profile</span>
-        </Link>
-      </div>
-    </nav>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    height: 70,
+    backgroundColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoIcon: {
+    backgroundColor: '#F97316',
+    padding: 8,
+    borderRadius: 10,
+  },
+  logoText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#F97316',
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  profileBtn: {
+    padding: 2,
+  },
+  loginBtn: {
+    backgroundColor: '#F97316',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  loginBtnText: {
+    color: 'white',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+});
 
 export default Navbar;

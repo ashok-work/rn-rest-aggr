@@ -1,12 +1,10 @@
-
 import React from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
   ScrollView, 
-  TouchableOpacity, 
-  Image 
+  TouchableOpacity 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -27,7 +25,11 @@ const Orders = () => {
         <Text style={styles.title}>Order History</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={true}
+      >
         {orders.length === 0 ? (
           <View style={styles.empty}>
             <FontAwesome6 name="utensils" size={48} color="#E5E7EB" />
@@ -81,10 +83,11 @@ const Orders = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollView: { flex: 1 },
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white' },
   backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   title: { fontSize: 24, fontWeight: '900', color: '#111827' },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 20, flexGrow: 1, paddingBottom: 100 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 100 },
   emptyText: { fontSize: 18, fontWeight: '700', color: '#9CA3AF', marginTop: 20, marginBottom: 30 },
   exploreBtn: { backgroundColor: '#F97316', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 15 },
