@@ -1,5 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider } from 'react-redux';
@@ -52,37 +52,41 @@ const NavigationContent = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator 
-        initialRouteName="Home"
-        screenOptions={{
-          headerShown: false,
-          cardStyle: { backgroundColor: '#F9FAFB' },
-          gestureEnabled: true,
-        }}
-      >
-        <Stack.Screen name="Home" component={Home} />
-        <Stack.Screen name="Menu" component={Menu} />
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-        <Stack.Screen name="ResetPassword" component={ResetPassword} />
-        <Stack.Screen name="Checkout" component={Checkout} />
-        <Stack.Screen name="Orders" component={Orders} />
-        <Stack.Screen name="OrderDetails" component={OrderDetails} />
-        <Stack.Screen name="Account" component={Account} />
-        <Stack.Screen name="ChangePassword" component={ChangePassword} />
-        <Stack.Screen name="Addresses" component={Addresses} />
-        <Stack.Screen name="Favorites" component={Favorites} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      <NavigationContainer>
+        {/* Added id prop to satisfy TypeScript requirement for this navigator overload */}
+        <Stack.Navigator 
+          id="MainStack"
+          initialRouteName="Home"
+          screenOptions={{
+            headerShown: false,
+            cardStyle: { backgroundColor: '#F9FAFB' },
+            gestureEnabled: true,
+          }}
+        >
+          <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Menu" component={Menu} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="Register" component={Register} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+          <Stack.Screen name="ResetPassword" component={ResetPassword} />
+          <Stack.Screen name="Checkout" component={Checkout} />
+          <Stack.Screen name="Orders" component={Orders} />
+          <Stack.Screen name="OrderDetails" component={OrderDetails} />
+          <Stack.Screen name="Account" component={Account} />
+          <Stack.Screen name="ChangePassword" component={ChangePassword} />
+          <Stack.Screen name="Addresses" component={Addresses} />
+          <Stack.Screen name="Favorites" component={Favorites} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 };
 
 const App: React.FC = () => {
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
+      <SafeAreaProvider style={{ flex: 1 }}>
         <StatusBar style="dark" />
         <NavigationContent />
       </SafeAreaProvider>

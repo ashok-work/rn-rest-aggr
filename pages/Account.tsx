@@ -51,10 +51,10 @@ const Account = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView 
-        style={{ flex: 1 }} 
-        showsVerticalScrollIndicator={true}
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.profileHeader}>
@@ -119,7 +119,8 @@ const Account = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  scrollContent: { paddingBottom: 100 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 110, flexGrow: 1 },
   profileHeader: { alignItems: 'center', paddingVertical: 40, backgroundColor: 'white', borderBottomLeftRadius: 40, borderBottomRightRadius: 40 },
   avatar: { width: 110, height: 110, borderRadius: 40, borderWidth: 4, borderColor: '#F3F4F6' },
   userName: { fontSize: 26, fontWeight: '900', color: '#111827', marginTop: 15 },

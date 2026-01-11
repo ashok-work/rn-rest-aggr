@@ -9,37 +9,37 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    html, body, #root {
+    html, body {
       height: 100%;
       width: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Prevents double scrollbars on web */
-      font-family: 'Inter', sans-serif;
+      overflow: hidden; /* Prevent browser scroll, let RN ScrollView handle it */
+      background-color: #F9FAFB;
     }
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    #root {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
     }
-    /* Hide scrollbar for IE, Edge and Firefox */
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    canvas {
+      user-select: none;
     }
   </style>
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react": "https://esm.sh/react@^18.2.0",
+    "react-dom": "https://esm.sh/react-dom@^18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@^18.2.0/",
     "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
     "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
     "framer-motion": "https://esm.sh/framer-motion@^12.25.0",
     "@reduxjs/toolkit": "https://esm.sh/@reduxjs/toolkit@^2.5.1",
     "react-redux": "https://esm.sh/react-redux@^9.2.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-native-safe-area-context": "https://esm.sh/react-native-safe-area-context@^5.6.2",
+    "react/": "https://esm.sh/react@^18.2.0/",
+    "react-native-safe-area-context": "https://esm.sh/react-native-safe-area-context@^4.10.1",
     "react-native": "https://esm.sh/react-native-web@^0.19.13",
     "@react-navigation/native": "https://esm.sh/@react-navigation/native@^7.1.26",
     "@expo/vector-icons": "https://esm.sh/@expo/vector-icons@^15.0.3",
@@ -47,12 +47,14 @@
     "@react-native-async-storage/async-storage": "https://esm.sh/@react-native-async-storage/async-storage@^2.2.0",
     "react-native-reanimated": "https://esm.sh/react-native-reanimated@^3.16.1",
     "expo-status-bar": "https://esm.sh/expo-status-bar@^2.0.1",
-    "@react-navigation/stack": "https://esm.sh/@react-navigation/stack@^7.6.13"
+    "@react-navigation/stack": "https://esm.sh/@react-navigation/stack@^7.6.13",
+    "react-native-screens": "https://esm.sh/react-native-screens@^3.31.1",
+    "react-native-gesture-handler": "https://esm.sh/react-native-gesture-handler@^2.16.1"
   }
 }
 </script>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body>
   <div id="root"></div>
 </body>
 </html>

@@ -88,11 +88,7 @@ const Menu = () => {
   const categories = Array.from(new Set(restaurant.menu.map(d => d.category)));
 
   const handleAddToCart = (dish: any) => {
-    if (cartItems.length > 0 && cartItems[0].restaurantId !== id) {
-      dispatch(addToCart({ dish, restaurantId: id }));
-    } else {
-      dispatch(addToCart({ dish, restaurantId: id }));
-    }
+    dispatch(addToCart({ dish, restaurantId: id }));
   };
 
   const fetchDishAI = async (dishId: string, name: string, desc: string) => {
@@ -125,8 +121,8 @@ const Menu = () => {
   return (
     <View style={styles.container}>
       <ScrollView 
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={true}
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Banner */}
@@ -277,7 +273,6 @@ const Menu = () => {
 
       <CartFAB />
 
-      {/* Review Modal */}
       <Modal visible={showReviewModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -309,7 +304,8 @@ const Menu = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  scrollContent: { paddingBottom: 120 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 120, flexGrow: 1 },
   banner: { height: 350, position: 'relative' },
   bannerImage: { width: '100%', height: '100%' },
   bannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },

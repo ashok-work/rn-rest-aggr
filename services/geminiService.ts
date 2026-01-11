@@ -1,12 +1,11 @@
-
 import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Generates an enticing, sensory-focused summary for a dish.
  */
 export const getDishSummary = async (dishName: string, description: string) => {
+  // Always create a new instance right before use to ensure the latest API key is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -25,6 +24,8 @@ export const getDishSummary = async (dishName: string, description: string) => {
 export const getReviewSummary = async (restaurantName: string, reviews: { rating: number; comment: string }[]) => {
   if (reviews.length === 0) return { summary: "No reviews yet. Be the first to share your experience!", verdict: "New Arrival" };
   
+  // Always create a new instance right before use to ensure the latest API key is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const reviewsText = reviews.map(r => `[Rating: ${r.rating}/5]: ${r.comment}`).join('\n');
   
   try {
@@ -53,6 +54,8 @@ export const getReviewSummary = async (restaurantName: string, reviews: { rating
 export const getPersonalizedPick = async (favoriteRestaurantNames: string[], allRestaurants: { name: string; cuisine: string; description: string }[]) => {
   if (favoriteRestaurantNames.length === 0) return null;
 
+  // Always create a new instance right before use to ensure the latest API key is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const restaurantsList = allRestaurants.map(r => `${r.name} (${r.cuisine}: ${r.description})`).join('\n');
 
   try {
@@ -77,6 +80,8 @@ export const getPersonalizedPick = async (favoriteRestaurantNames: string[], all
  * Generates smart order note suggestions based on cart contents.
  */
 export const suggestOrderNotes = async (dishNames: string[]) => {
+  // Always create a new instance right before use to ensure the latest API key is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -94,6 +99,8 @@ export const suggestOrderNotes = async (dishNames: string[]) => {
 export const generateTasteProfile = async (orderItems: string[]) => {
   if (orderItems.length === 0) return "Explore some restaurants to discover your taste profile!";
   
+  // Always create a new instance right before use to ensure the latest API key is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
