@@ -1,35 +1,60 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image, 
+  Dimensions, 
+  Modal,
+  TextInput,
+  ActivityIndicator
+} from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { FontAwesome6 } from '@expo/vector-icons';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import { addReview } from '../store/slices/reviewSlice';
 import { MOCK_RESTAURANTS } from '../constants';
 import { getDishSummary, getReviewSummary } from '../services/geminiService';
 import FavoriteButton from '../components/FavoriteButton';
+import CartFAB from '../components/CartFAB';
 
-const StarRating: React.FC<{ rating: number; max?: number; interactive?: boolean; onRate?: (r: number) => void }> = ({ rating, max = 5, interactive = false, onRate }) => {
+const { width } = Dimensions.get('window');
+
+const StarRating = ({ rating, max = 5, interactive = false, onRate }: any) => {
   return (
-    <div className="flex items-center space-x-1">
+    <View style={styles.starRow}>
       {[...Array(max)].map((_, i) => {
         const starValue = i + 1;
         const isFilled = starValue <= rating;
         return (
-          <i
-            key={i}
-            onClick={() => interactive && onRate && onRate(starValue)}
-            className={`${isFilled ? 'fas' : 'far'} fa-star ${isFilled ? 'text-orange-500' : 'text-gray-300'} ${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'text-xs'}`}
-          ></i>
+          <TouchableOpacity 
+            key={i} 
+            disabled={!interactive} 
+            onPress={() => onRate && onRate(starValue)}
+          >
+            <FontAwesome6 
+              name="star" 
+              solid={isFilled} 
+              size={12} 
+              color={isFilled ? '#F97316' : '#E5E7EB'} 
+              style={{ marginRight: 2 }}
+            />
+          </TouchableOpacity>
         );
       })}
-    </div>
+    </View>
   );
 };
 
-const Menu: React.FC = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+const Menu = () => {
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const { id } = route.params;
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector((state) => state.cart.items);
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
@@ -38,7 +63,7 @@ const Menu: React.FC = () => {
   const [summaries, setSummaries] = useState<Record<string, string>>({});
   const [reviewAI, setReviewAI] = useState<{summary: string, verdict: string} | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
 
@@ -55,19 +80,19 @@ const Menu: React.FC = () => {
       };
       fetchReviewAI();
     }
-  }, [reviews, restaurant, reviewAI]);
+  }, [reviews]);
 
-  if (!restaurant) return <div className="p-10 text-center font-bold text-gray-400">Restaurant not found.</div>;
+  if (!restaurant) return null;
 
   const categories = Array.from(new Set(restaurant.menu.map(d => d.category)));
 
   const handleAddToCart = (dish: any) => {
     if (cartItems.length > 0 && cartItems[0].restaurantId !== id) {
-      if (!confirm("Your cart contains items from another restaurant. Clear cart and start a new order here?")) {
-        return;
-      }
+      // For simplicity in mobile demo, we just clear and add
+      dispatch(addToCart({ dish, restaurantId: id }));
+    } else {
+      dispatch(addToCart({ dish, restaurantId: id }));
     }
-    dispatch(addToCart({ dish, restaurantId: id! }));
   };
 
   const fetchDishAI = async (dishId: string, name: string, desc: string) => {
@@ -76,16 +101,15 @@ const Menu: React.FC = () => {
     setSummaries(prev => ({ ...prev, [dishId]: summary }));
   };
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleReviewSubmit = () => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigation.navigate('Login');
       return;
     }
     if (!newComment.trim()) return;
 
     dispatch(addReview({
-      restaurantId: id!,
+      restaurantId: id,
       userName: user!.name,
       userAvatar: user!.avatar,
       rating: newRating,
@@ -94,303 +118,260 @@ const Menu: React.FC = () => {
 
     setNewComment('');
     setNewRating(5);
-    setShowReviewForm(false);
-    setReviewAI(null); // Reset AI summary so it re-generates with new review data
+    setShowReviewModal(false);
+    setReviewAI(null);
   };
 
   return (
-    <div className="bg-white min-h-screen pb-20">
-      {/* Visual Banner */}
-      <div className="relative h-72 md:h-96">
-        <img src={restaurant.image} className="w-full h-full object-cover" alt={restaurant.name} />
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
-        
-        <button 
-          onClick={() => navigate(-1)}
-          className="absolute top-8 left-8 w-12 h-12 bg-white/90 backdrop-blur rounded-2xl flex items-center justify-center shadow-2xl text-gray-900 hover:text-orange-600 z-20 transition-all active:scale-90"
-        >
-          <i className="fas fa-arrow-left"></i>
-        </button>
+    <View style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Banner */}
+        <View style={styles.banner}>
+          <Image source={{ uri: restaurant.image }} style={styles.bannerImage} />
+          <View style={styles.bannerOverlay} />
+          <TouchableOpacity 
+            style={styles.backBtn} 
+            onPress={() => navigation.goBack()}
+          >
+            <FontAwesome6 name="arrow-left" size={18} color="#111827" />
+          </TouchableOpacity>
+          <View style={styles.favContainer}>
+            <FavoriteButton restaurantId={restaurant.id} size="lg" />
+          </View>
+        </View>
 
-        <div className="absolute top-8 right-8 z-20">
-          <FavoriteButton restaurantId={restaurant.id} size="lg" />
-        </div>
-      </div>
+        {/* Content */}
+        <View style={styles.headerCard}>
+          <Text style={styles.statusLabel}>Highly Rated establishment</Text>
+          <Text style={styles.title}>{restaurant.name}</Text>
+          <View style={styles.cuisineRow}>
+            <FontAwesome6 name="location-dot" size={12} color="#F97316" />
+            <Text style={styles.cuisineText}>{restaurant.cuisine}</Text>
+          </View>
 
-      {/* Main Container */}
-      <div className="max-w-5xl mx-auto px-6 -mt-24 relative z-10">
-        {/* Restaurant Header Card */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="bg-white rounded-[3.5rem] p-10 md:p-14 shadow-2xl border border-gray-100 mb-16"
-        >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-4">
-              <p className="text-orange-600 font-black uppercase tracking-[0.3em] text-[10px]">
-                Highly Rated establishment
-              </p>
-              <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight leading-none">
-                {restaurant.name}
-              </h1>
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs flex items-center">
-                <i className="fas fa-map-marker-alt text-orange-500 mr-2"></i>
-                {restaurant.cuisine}
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-10 bg-gray-50/80 backdrop-blur p-6 rounded-[2.5rem] border border-gray-100">
-              <div className="text-center">
-                <div className="text-orange-600 font-black text-2xl mb-1">{restaurant.rating}</div>
-                <div className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Score</div>
-              </div>
-              <div className="w-px h-10 bg-gray-200"></div>
-              <div className="text-center">
-                <div className="font-black text-gray-900 text-xl mb-1">{restaurant.deliveryTime}</div>
-                <div className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Arrival</div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Text style={styles.statVal}>{restaurant.rating}</Text>
+              <Text style={styles.statLabel}>Score</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.statBox}>
+              <Text style={styles.statVal}>{restaurant.deliveryTime}</Text>
+              <Text style={styles.statLabel}>Arrival</Text>
+            </View>
+          </View>
+        </View>
 
-        {/* Menu Section */}
-        <div className="space-y-20 mb-32">
-          {categories.map((cat, catIdx) => (
-            <motion.section 
-              key={cat}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: catIdx * 0.1 }}
-            >
-              <h2 className="text-3xl font-black mb-10 text-gray-900 flex items-center">
-                <span className="w-2 h-10 bg-orange-500 rounded-full mr-5 shadow-lg shadow-orange-500/20"></span>
-                {cat}
-              </h2>
-              
-              <div className="grid grid-cols-1 gap-12">
-                {restaurant.menu.filter(d => d.category === cat).map(dish => {
-                  const inCart = cartItems.find(i => i.id === dish.id);
-                  return (
-                    <div 
-                      key={dish.id} 
-                      className="flex flex-col md:flex-row gap-8 group"
+        {/* Menu Sections */}
+        {categories.map((cat, catIdx) => (
+          <View key={cat} style={styles.section}>
+            <View style={styles.sectionTitleRow}>
+              <View style={styles.sectionMarker} />
+              <Text style={styles.sectionTitle}>{cat}</Text>
+            </View>
+
+            {restaurant.menu.filter(d => d.category === cat).map(dish => (
+              <Animated.View 
+                key={dish.id} 
+                entering={FadeInUp.delay(catIdx * 100)}
+                style={styles.dishCard}
+              >
+                <View style={styles.dishInfo}>
+                  <View style={styles.dishHeader}>
+                    <Text style={styles.dishName}>{dish.name}</Text>
+                    <Text style={styles.dishPrice}>${dish.price.toFixed(2)}</Text>
+                  </View>
+                  <Text style={styles.dishDesc} numberOfLines={2}>{dish.description}</Text>
+                  
+                  {summaries[dish.id] ? (
+                    <View style={styles.aiDishNote}>
+                      <View style={styles.aiBadge}>
+                        <FontAwesome6 name="wand-magic-sparkles" size={8} color="#F97316" />
+                        <Text style={styles.aiBadgeText}>Chef's Note</Text>
+                      </View>
+                      <Text style={styles.aiNoteText}>"{summaries[dish.id]}"</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity 
+                      onPress={() => fetchDishAI(dish.id, dish.name, dish.description)}
+                      style={styles.aiAction}
                     >
-                      <div className="flex-1 order-2 md:order-1 space-y-4">
-                        <div className="flex justify-between items-start">
-                           <h4 className="text-2xl font-black text-gray-900 group-hover:text-orange-600 transition-colors leading-tight">
-                             {dish.name}
-                           </h4>
-                           <span className="text-2xl font-black text-gray-900">${dish.price.toFixed(2)}</span>
-                        </div>
-                        
-                        <p className="text-gray-500 leading-relaxed font-medium">
-                          {dish.description}
-                        </p>
-                        
-                        <div className="min-h-[40px]">
-                           {summaries[dish.id] ? (
-                             <motion.div 
-                               initial={{ opacity: 0, x: -10 }} 
-                               animate={{ opacity: 1, x: 0 }} 
-                               className="text-[12px] bg-orange-50/60 text-orange-900 p-5 rounded-[2rem] border border-orange-100/50 italic leading-relaxed relative"
-                             >
-                               <div className="absolute -top-3 left-6 bg-white px-3 text-[9px] font-black uppercase text-orange-500 tracking-widest border border-orange-100 rounded-full">
-                                  <i className="fas fa-sparkles mr-1.5"></i> Chef's Note
-                               </div>
-                               "{summaries[dish.id]}"
-                             </motion.div>
-                           ) : (
-                             <button 
-                               onClick={() => fetchDishAI(dish.id, dish.name, dish.description)}
-                               className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 hover:text-orange-700 transition-all flex items-center bg-orange-50 px-4 py-2 rounded-full"
-                             >
-                               <i className="fas fa-magic mr-2 animate-pulse"></i> Sensory Insight
-                             </button>
-                           )}
-                        </div>
-
-                        <button 
-                          onClick={() => handleAddToCart(dish)}
-                          className={`w-full md:w-auto px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center space-x-3 ${inCart ? 'bg-green-600 text-white shadow-xl shadow-green-100' : 'bg-gray-900 text-white hover:bg-orange-600 shadow-xl shadow-gray-200'}`}
-                        >
-                          <i className={`fas ${inCart ? 'fa-check' : 'fa-plus'}`}></i>
-                          <span>{inCart ? 'Added to Bag' : 'Add to Bag'}</span>
-                        </button>
-                      </div>
-                      
-                      {/* Dish Image with Quick-Add */}
-                      <div className="relative w-full md:w-56 h-56 rounded-[3.5rem] overflow-hidden flex-shrink-0 shadow-2xl group-hover:scale-[1.02] transition-all duration-700 order-1 md:order-2">
-                        <img src={dish.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={dish.name} />
-                        <motion.button
-                          whileHover={{ scale: 1.15 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleAddToCart(dish)}
-                          className="absolute bottom-6 right-6 w-12 h-12 bg-orange-500/90 backdrop-blur-md text-white rounded-2xl flex items-center justify-center shadow-2xl border border-white/20 transition-all hover:bg-orange-600"
-                        >
-                          <i className="fas fa-plus text-lg"></i>
-                        </motion.button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.section>
-          ))}
-        </div>
-
-        {/* Reviews Section Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-24"></div>
-
-        {/* Reviews Section */}
-        <section id="reviews" className="space-y-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight">Community Stories</h2>
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs mt-2">
-                {reviews.length} Verified Customer Reviews
-              </p>
-            </div>
-            <button 
-              onClick={() => isAuthenticated ? setShowReviewForm(true) : navigate('/login')}
-              className="px-8 py-4 bg-orange-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-orange-700 transition-all shadow-xl shadow-orange-100 flex items-center"
-            >
-              <i className="fas fa-pen-nib mr-3"></i>
-              Write a Review
-            </button>
-          </div>
-
-          {/* AI Insights Card */}
-          {reviews.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="bg-gray-900 p-10 md:p-14 rounded-[4rem] text-white shadow-3xl relative overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 p-12 opacity-5">
-                <i className="fas fa-brain text-[12rem]"></i>
-              </div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
-                      <i className="fas fa-sparkles text-sm"></i>
-                    </div>
-                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-orange-400">Review Intelligence</span>
-                  </div>
-                  {reviewAI?.verdict && (
-                    <span className="px-5 py-2 bg-white/10 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 text-orange-200">
-                      {reviewAI.verdict}
-                    </span>
+                      <FontAwesome6 name="wand-magic-sparkles" size={10} color="#F97316" />
+                      <Text style={styles.aiActionText}>SENSORY INSIGHT</Text>
+                    </TouchableOpacity>
                   )}
-                </div>
-                {isSummarizing ? (
-                  <div className="space-y-4">
-                    <div className="h-5 bg-white/10 rounded-full w-full animate-pulse"></div>
-                    <div className="h-5 bg-white/10 rounded-full w-2/3 animate-pulse"></div>
-                  </div>
-                ) : (
-                  <p className="text-xl md:text-2xl font-medium leading-relaxed italic text-gray-200">
-                    "{reviewAI?.summary || "Analyzing the latest feedback to provide you with the best experience..."}"
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          )}
 
-          {/* Review List */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {reviews.length === 0 ? (
-              <div className="md:col-span-2 text-center py-32 bg-gray-50 rounded-[4rem] border-2 border-dashed border-gray-200">
-                <i className="far fa-comments text-6xl text-gray-200 mb-8 block"></i>
-                <p className="text-gray-400 font-black uppercase tracking-widest text-sm">No reviews yet. Share yours!</p>
-              </div>
+                  <TouchableOpacity 
+                    onPress={() => handleAddToCart(dish)}
+                    style={styles.addBtn}
+                  >
+                    <FontAwesome6 name="plus" size={12} color="white" />
+                    <Text style={styles.addBtnText}>ADD TO BAG</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.dishImageWrapper}>
+                  <Image source={{ uri: dish.image }} style={styles.dishImage} />
+                </View>
+              </Animated.View>
+            ))}
+          </View>
+        ))}
+
+        {/* AI Insight Card */}
+        {reviews.length > 0 && (
+          <View style={styles.aiSummaryCard}>
+            <View style={styles.aiHeader}>
+              <View style={styles.aiHeaderLeft}>
+                <View style={styles.aiIcon}>
+                  <FontAwesome6 name="wand-magic-sparkles" size={12} color="white" />
+                </View>
+                <Text style={styles.aiHeaderText}>REVIEW INTELLIGENCE</Text>
+              </View>
+              {reviewAI?.verdict && (
+                <View style={styles.verdictBadge}>
+                  <Text style={styles.verdictText}>{reviewAI.verdict}</Text>
+                </View>
+              )}
+            </View>
+            {isSummarizing ? (
+              <ActivityIndicator color="#F97316" style={{ marginTop: 10 }} />
             ) : (
-              reviews.map((review, idx) => (
-                <motion.div 
-                  key={review.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all"
-                >
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center space-x-4">
-                      <img src={review.userAvatar} className="w-14 h-14 rounded-[1.25rem] border-4 border-white shadow-xl" alt={review.userName} />
-                      <div>
-                        <p className="font-black text-gray-900 text-lg">{review.userName}</p>
-                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">
-                          {new Date(review.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-orange-50/80 px-4 py-2 rounded-2xl border border-orange-100">
-                      <StarRating rating={review.rating} />
-                    </div>
-                  </div>
-                  <p className="text-gray-600 leading-relaxed font-medium text-lg italic">
-                    "{review.comment}"
-                  </p>
-                </motion.div>
-              ))
+              <Text style={styles.aiSummaryText}>"{reviewAI?.summary}"</Text>
             )}
-          </div>
-        </section>
-      </div>
-
-      {/* Review Submission Modal */}
-      <AnimatePresence>
-        {showReviewForm && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-              onClick={() => setShowReviewForm(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" 
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 30 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 30 }} 
-              className="relative bg-white w-full max-w-xl rounded-[4rem] p-12 md:p-16 shadow-3xl"
-            >
-              <div className="text-center mb-12">
-                <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <i className="fas fa-heart text-2xl"></i>
-                </div>
-                <h2 className="text-4xl font-black text-gray-900 tracking-tight">Share the Vibe</h2>
-                <p className="text-gray-400 text-sm mt-3 font-medium tracking-wide uppercase">Your rating for {restaurant.name}</p>
-              </div>
-              
-              <form onSubmit={handleReviewSubmit} className="space-y-10">
-                <div className="flex flex-col items-center bg-gray-50 p-8 rounded-[3rem] border border-gray-100">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-6">Select Rating</label>
-                  <StarRating rating={newRating} interactive onRate={setNewRating} />
-                </div>
-                
-                <div>
-                  <textarea 
-                    required
-                    className="w-full p-8 bg-gray-50 rounded-[3rem] border-2 border-transparent focus:border-orange-500 focus:bg-white transition-all outline-none text-gray-700 h-44 font-medium text-lg leading-relaxed shadow-inner"
-                    placeholder="Describe the textures, the service, the mood..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex space-x-6">
-                  <button type="button" onClick={() => setShowReviewForm(false)} className="flex-1 py-5 bg-gray-100 text-gray-700 font-black text-[11px] uppercase tracking-widest rounded-[2rem] active:scale-95 transition-all">
-                    Discard
-                  </button>
-                  <button type="submit" className="flex-1 py-5 bg-orange-600 text-white font-black text-[11px] uppercase tracking-widest rounded-[2rem] shadow-2xl shadow-orange-100 active:scale-95 transition-all">
-                    Post Feedback
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
+          </View>
         )}
-      </AnimatePresence>
-    </div>
+
+        {/* Reviews */}
+        <View style={styles.reviewsSection}>
+          <View style={styles.reviewHeaderRow}>
+            <Text style={styles.reviewTitle}>Community Stories</Text>
+            <TouchableOpacity 
+              onPress={() => setShowReviewModal(true)}
+              style={styles.writeBtn}
+            >
+              <FontAwesome6 name="pen-nib" size={12} color="white" />
+              <Text style={styles.writeBtnText}>Review</Text>
+            </TouchableOpacity>
+          </View>
+
+          {reviews.map(review => (
+            <View key={review.id} style={styles.reviewCard}>
+              <View style={styles.reviewUserRow}>
+                <Image source={{ uri: review.userAvatar }} style={styles.reviewAvatar} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.reviewUserName}>{review.userName}</Text>
+                  <Text style={styles.reviewDate}>{new Date(review.date).toLocaleDateString()}</Text>
+                </View>
+                <StarRating rating={review.rating} />
+              </View>
+              <Text style={styles.reviewComment}>"{review.comment}"</Text>
+            </View>
+          ))}
+        </View>
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      <CartFAB />
+
+      {/* Review Modal */}
+      <Modal visible={showReviewModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Share the Vibe</Text>
+            <View style={styles.modalStars}>
+              <StarRating rating={newRating} interactive onRate={setNewRating} />
+            </View>
+            <TextInput 
+              style={styles.modalInput}
+              placeholder="How was your experience?"
+              multiline
+              value={newComment}
+              onChangeText={setNewComment}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => setShowReviewModal(false)} style={styles.cancelBtn}>
+                <Text style={styles.cancelText}>Discard</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleReviewSubmit} style={styles.submitBtn}>
+                <Text style={styles.submitText}>Post</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  banner: { height: 350, position: 'relative' },
+  bannerImage: { width: '100%', height: '100%' },
+  bannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
+  backBtn: { position: 'absolute', top: 60, left: 20, width: 44, height: 44, borderRadius: 15, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
+  favContainer: { position: 'absolute', top: 60, right: 20 },
+  headerCard: { marginTop: -60, marginHorizontal: 20, backgroundColor: 'white', borderRadius: 40, padding: 30, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 10 },
+  statusLabel: { fontSize: 10, fontWeight: '900', color: '#F97316', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 },
+  title: { fontSize: 32, fontWeight: '900', color: '#111827' },
+  cuisineRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 },
+  cuisineText: { fontSize: 12, color: '#9CA3AF', fontWeight: '700', textTransform: 'uppercase' },
+  statsContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 25, padding: 20, marginTop: 25 },
+  statBox: { flex: 1, alignItems: 'center' },
+  statVal: { fontSize: 20, fontWeight: '900', color: '#111827' },
+  statLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '800', textTransform: 'uppercase', marginTop: 4 },
+  divider: { width: 1, height: 40, backgroundColor: '#E5E7EB' },
+  section: { marginTop: 40, paddingHorizontal: 20 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  sectionMarker: { width: 4, height: 20, backgroundColor: '#F97316', borderRadius: 2, marginRight: 12 },
+  sectionTitle: { fontSize: 22, fontWeight: '900', color: '#111827' },
+  dishCard: { flexDirection: 'row', gap: 15, marginBottom: 30 },
+  dishInfo: { flex: 1 },
+  dishHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  dishName: { fontSize: 18, fontWeight: '800', color: '#111827', flex: 1 },
+  dishPrice: { fontSize: 18, fontWeight: '900', color: '#111827' },
+  dishDesc: { fontSize: 14, color: '#6B7280', lineHeight: 20, fontWeight: '500' },
+  aiDishNote: { marginTop: 15, padding: 15, backgroundColor: '#FFF7ED', borderRadius: 20, borderWidth: 1, borderColor: '#FFEDD5' },
+  // Fixed borderWeight to borderWidth
+  aiBadge: { position: 'absolute', top: -10, left: 15, backgroundColor: 'white', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, borderWidth: 1, borderColor: '#FFEDD5', flexDirection: 'row', alignItems: 'center', gap: 5 },
+  aiBadgeText: { fontSize: 8, fontWeight: '900', color: '#F97316', textTransform: 'uppercase' },
+  aiNoteText: { fontSize: 12, fontStyle: 'italic', color: '#9A3412', fontWeight: '600' },
+  aiAction: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFF7ED', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginTop: 15 },
+  aiActionText: { fontSize: 10, fontWeight: '900', color: '#F97316' },
+  addBtn: { backgroundColor: '#111827', alignSelf: 'flex-start', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 15, marginTop: 20, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  addBtnText: { color: 'white', fontSize: 11, fontWeight: '900' },
+  dishImageWrapper: { width: 120, height: 120, borderRadius: 30, overflow: 'hidden' },
+  dishImage: { width: '100%', height: '100%' },
+  aiSummaryCard: { margin: 20, backgroundColor: '#111827', borderRadius: 35, padding: 30 },
+  aiHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  aiHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  aiIcon: { width: 30, height: 30, backgroundColor: '#F97316', borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  aiHeaderText: { color: '#F97316', fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
+  verdictBadge: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12 },
+  verdictText: { color: '#FFEDD5', fontSize: 10, fontWeight: '900' },
+  aiSummaryText: { color: '#E5E7EB', fontSize: 18, fontWeight: '500', lineHeight: 28, fontStyle: 'italic' },
+  reviewsSection: { paddingHorizontal: 20, marginTop: 20 },
+  reviewHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  reviewTitle: { fontSize: 22, fontWeight: '900', color: '#111827' },
+  writeBtn: { backgroundColor: '#F97316', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  writeBtnText: { color: 'white', fontSize: 12, fontWeight: '800' },
+  reviewCard: { backgroundColor: 'white', padding: 25, borderRadius: 30, marginBottom: 15, borderWidth: 1, borderColor: '#F3F4F6' },
+  reviewUserRow: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 15 },
+  reviewAvatar: { width: 44, height: 44, borderRadius: 15 },
+  reviewUserName: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  reviewDate: { fontSize: 10, color: '#9CA3AF', fontWeight: '700' },
+  reviewComment: { fontSize: 15, color: '#4B5563', lineHeight: 22, fontStyle: 'italic', fontWeight: '500' },
+  starRow: { flexDirection: 'row' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: 'white', borderRadius: 40, padding: 30, alignItems: 'center' },
+  modalTitle: { fontSize: 24, fontWeight: '900', color: '#111827', marginBottom: 20 },
+  modalStars: { marginBottom: 30 },
+  modalInput: { width: '100%', backgroundColor: '#F3F4F6', borderRadius: 25, padding: 20, height: 120, fontSize: 16, textAlignVertical: 'top' },
+  modalButtons: { flexDirection: 'row', gap: 15, marginTop: 30 },
+  cancelBtn: { flex: 1, paddingVertical: 18, backgroundColor: '#F3F4F6', borderRadius: 20, alignItems: 'center' },
+  cancelText: { fontWeight: '800', color: '#6B7280' },
+  submitBtn: { flex: 1, paddingVertical: 18, backgroundColor: '#F97316', borderRadius: 20, alignItems: 'center' },
+  submitText: { fontWeight: '900', color: 'white' }
+});
 
 export default Menu;

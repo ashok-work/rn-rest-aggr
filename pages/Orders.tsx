@@ -1,78 +1,104 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image 
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome6 } from '@expo/vector-icons';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useAppSelector } from '../store/hooks';
 import { OrderStatus } from '../types';
 
-const Orders: React.FC = () => {
+const Orders = () => {
+  const navigation = useNavigation<any>();
   const orders = useAppSelector((state) => state.orders.orders);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-10 py-10">
-      <h1 className="text-3xl font-black mb-10 flex items-center">
-        <i className="fas fa-receipt text-orange-600 mr-4"></i>
-        Order History
-      </h1>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <FontAwesome6 name="arrow-left" size={18} color="#111827" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Order History</Text>
+      </View>
 
-      {orders.length === 0 ? (
-        <div className="bg-white p-20 rounded-3xl text-center shadow-sm">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
-             <i className="fas fa-utensils text-3xl"></i>
-          </div>
-          <h2 className="text-xl font-bold mb-2">No orders yet</h2>
-          <p className="text-gray-400 mb-8">Hungry? Explore restaurants near you!</p>
-          <Link to="/" className="px-8 py-3 bg-orange-600 text-white font-bold rounded-2xl">Start Ordering</Link>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {orders.map((order, idx) => (
-            <motion.div 
-              key={order.id}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {orders.length === 0 ? (
+          <View style={styles.empty}>
+            <FontAwesome6 name="utensils" size={48} color="#E5E7EB" />
+            <Text style={styles.emptyText}>No orders yet</Text>
+            <TouchableOpacity 
+              style={styles.exploreBtn}
+              onPress={() => navigation.navigate('Home')}
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-orange-500">
-                    <i className="fas fa-store text-2xl"></i>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{order.restaurantName}</h3>
-                    <p className="text-sm text-gray-400">{new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {order.items.length} items</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between md:flex-col md:items-end gap-2">
-                  <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
-                    order.status === OrderStatus.CANCELLED ? 'bg-red-50 text-red-600' : 
-                    order.status === OrderStatus.DELIVERED ? 'bg-green-50 text-green-600' :
-                    'bg-orange-50 text-orange-600'
-                  }`}>
-                    {order.status}
-                  </div>
-                  <div className="text-lg font-black">${order.total.toFixed(2)}</div>
-                </div>
-              </div>
+              <Text style={styles.exploreBtnText}>Start Ordering</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          orders.map((order, idx) => (
+            <Animated.View 
+              key={order.id} 
+              entering={FadeInUp.delay(idx * 100)}
+              style={styles.card}
+            >
+              <TouchableOpacity onPress={() => navigation.navigate('OrderDetails', { id: order.id })}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.storeIcon}>
+                    <FontAwesome6 name="shop" size={20} color="#F97316" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.restaurantName}>{order.restaurantName}</Text>
+                    <Text style={styles.orderMeta}>
+                      {new Date(order.date).toLocaleDateString()} • {order.items.length} items
+                    </Text>
+                  </View>
+                  <View style={[styles.statusBadge, { 
+                    backgroundColor: order.status === OrderStatus.CANCELLED ? '#FEF2F2' : '#F0FDF4' 
+                  }]}>
+                    <Text style={[styles.statusText, { 
+                      color: order.status === OrderStatus.CANCELLED ? '#EF4444' : '#22C55E' 
+                    }]}>{order.status}</Text>
+                  </View>
+                </View>
 
-              <div className="mt-6 pt-6 border-t flex space-x-3">
-                <Link to={`/order/${order.id}`} className="flex-1 text-center py-2.5 bg-gray-50 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-100 transition">
-                  Details
-                </Link>
-                {order.status === OrderStatus.DELIVERED && (
-                   <button className="flex-1 text-center py-2.5 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition">
-                    Reorder
-                   </button>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </div>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.totalLabel}>Total Paid</Text>
+                  <Text style={styles.totalValue}>${order.total.toFixed(2)}</Text>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white' },
+  backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  title: { fontSize: 24, fontWeight: '900', color: '#111827' },
+  scrollContent: { padding: 20 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 100 },
+  emptyText: { fontSize: 18, fontWeight: '700', color: '#9CA3AF', marginTop: 20, marginBottom: 30 },
+  exploreBtn: { backgroundColor: '#F97316', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 15 },
+  exploreBtnText: { color: 'white', fontWeight: '900' },
+  card: { backgroundColor: 'white', borderRadius: 25, padding: 20, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 15 },
+  storeIcon: { width: 50, height: 50, backgroundColor: '#F9FAFB', borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
+  restaurantName: { fontSize: 18, fontWeight: '800', color: '#111827' },
+  orderMeta: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', marginTop: 2 },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  statusText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  cardFooter: { marginTop: 20, paddingTop: 15, borderTopWidth: 1, borderTopColor: '#F3F4F6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { fontSize: 14, color: '#9CA3AF', fontWeight: '700' },
+  totalValue: { fontSize: 20, fontWeight: '900', color: '#111827' }
+});
 
 export default Orders;

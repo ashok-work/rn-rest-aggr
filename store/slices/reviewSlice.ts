@@ -1,14 +1,14 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Review } from '../../types';
 
 interface ReviewState {
   reviews: Review[];
 }
 
-const savedReviews = localStorage.getItem('reviews');
 const initialState: ReviewState = {
-  reviews: savedReviews ? JSON.parse(savedReviews) : [
+  reviews: [
     {
       id: 'rev1',
       restaurantId: '1',
@@ -17,15 +17,6 @@ const initialState: ReviewState = {
       rating: 5,
       comment: 'The best burgers in town! The wagyu patty was perfectly cooked.',
       date: '2023-10-25T14:30:00.000Z'
-    },
-    {
-      id: 'rev2',
-      restaurantId: '1',
-      userName: 'Bob Johnson',
-      userAvatar: 'https://i.pravatar.cc/150?u=bob',
-      rating: 4,
-      comment: 'Great flavor, but delivery took a bit longer than expected.',
-      date: '2023-11-02T18:15:00.000Z'
     }
   ],
 };
@@ -34,6 +25,9 @@ const reviewSlice = createSlice({
   name: 'reviews',
   initialState,
   reducers: {
+    setReviews: (state, action: PayloadAction<Review[]>) => {
+      state.reviews = action.payload;
+    },
     addReview: (state, action: PayloadAction<Omit<Review, 'id' | 'date'>>) => {
       const newReview: Review = {
         ...action.payload,
@@ -41,10 +35,10 @@ const reviewSlice = createSlice({
         date: new Date().toISOString(),
       };
       state.reviews = [newReview, ...state.reviews];
-      localStorage.setItem('reviews', JSON.stringify(state.reviews));
+      AsyncStorage.setItem('reviews', JSON.stringify(state.reviews));
     },
   },
 });
 
-export const { addReview } = reviewSlice.actions;
+export const { addReview, setReviews } = reviewSlice.actions;
 export default reviewSlice.reducer;
