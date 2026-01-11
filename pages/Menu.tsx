@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
@@ -88,7 +89,6 @@ const Menu = () => {
 
   const handleAddToCart = (dish: any) => {
     if (cartItems.length > 0 && cartItems[0].restaurantId !== id) {
-      // For simplicity in mobile demo, we just clear and add
       dispatch(addToCart({ dish, restaurantId: id }));
     } else {
       dispatch(addToCart({ dish, restaurantId: id }));
@@ -124,7 +124,11 @@ const Menu = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Banner */}
         <View style={styles.banner}>
           <Image source={{ uri: restaurant.image }} style={styles.bannerImage} />
@@ -269,7 +273,6 @@ const Menu = () => {
             </View>
           ))}
         </View>
-        <View style={{ height: 100 }} />
       </ScrollView>
 
       <CartFAB />
@@ -306,11 +309,12 @@ const Menu = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollContent: { paddingBottom: 120 },
   banner: { height: 350, position: 'relative' },
   bannerImage: { width: '100%', height: '100%' },
   bannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
-  backBtn: { position: 'absolute', top: 60, left: 20, width: 44, height: 44, borderRadius: 15, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
-  favContainer: { position: 'absolute', top: 60, right: 20 },
+  backBtn: { position: 'absolute', top: 50, left: 20, width: 44, height: 44, borderRadius: 15, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
+  favContainer: { position: 'absolute', top: 50, right: 20 },
   headerCard: { marginTop: -60, marginHorizontal: 20, backgroundColor: 'white', borderRadius: 40, padding: 30, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 10 },
   statusLabel: { fontSize: 10, fontWeight: '900', color: '#F97316', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 },
   title: { fontSize: 32, fontWeight: '900', color: '#111827' },
@@ -332,7 +336,6 @@ const styles = StyleSheet.create({
   dishPrice: { fontSize: 18, fontWeight: '900', color: '#111827' },
   dishDesc: { fontSize: 14, color: '#6B7280', lineHeight: 20, fontWeight: '500' },
   aiDishNote: { marginTop: 15, padding: 15, backgroundColor: '#FFF7ED', borderRadius: 20, borderWidth: 1, borderColor: '#FFEDD5' },
-  // Fixed borderWeight to borderWidth
   aiBadge: { position: 'absolute', top: -10, left: 15, backgroundColor: 'white', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, borderWidth: 1, borderColor: '#FFEDD5', flexDirection: 'row', alignItems: 'center', gap: 5 },
   aiBadgeText: { fontSize: 8, fontWeight: '900', color: '#F97316', textTransform: 'uppercase' },
   aiNoteText: { fontSize: 12, fontStyle: 'italic', color: '#9A3412', fontWeight: '600' },

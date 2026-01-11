@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout } from '../store/slices/authSlice';
@@ -50,62 +51,76 @@ const Account = () => {
   ];
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.profileHeader}>
-        <Image source={{ uri: user?.avatar }} style={styles.avatar} />
-        <Text style={styles.userName}>{user?.name}</Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
-      </View>
-
-      <Animated.View entering={FadeInUp.delay(200)} style={styles.aiCard}>
-        <View style={styles.aiHeader}>
-          <FontAwesome6 name="wand-magic-sparkles" size={12} color="white" />
-          <Text style={styles.aiHeaderText}>TASTE PROFILE</Text>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.profileHeader}>
+          <Image source={{ uri: user?.avatar }} style={styles.avatar} />
+          <Text style={styles.userName}>{user?.name}</Text>
+          <Text style={styles.userEmail}>{user?.email}</Text>
         </View>
-        {isLoadingProfile ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <View>
-            <Text style={styles.profileTitle}>
-              {tasteProfile.split(':')[0] || "Exploring your taste..."}
-            </Text>
-            <Text style={styles.profileDesc}>
-              "{tasteProfile.split(':')[1]?.trim() || "Order more to let AI define your palate."}"
-            </Text>
-          </View>
-        )}
-      </Animated.View>
 
-      <View style={styles.menuList}>
-        {menuItems.map((item, idx) => (
-          <TouchableOpacity 
-            key={idx} 
-            style={styles.menuItem}
-            onPress={() => navigation.navigate(item.route)}
-          >
-            <View style={[styles.iconWrapper, { backgroundColor: item.color + '20' }]}>
-              <FontAwesome6 name={item.icon} size={18} color={item.color} />
+        <Animated.View entering={FadeInUp.delay(200)} style={styles.aiCard}>
+          <View style={styles.aiHeader}>
+            <FontAwesome6 name="wand-magic-sparkles" size={12} color="white" />
+            <Text style={styles.aiHeaderText}>TASTE PROFILE</Text>
+          </View>
+          {isLoadingProfile ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <View>
+              <Text style={styles.profileTitle}>
+                {tasteProfile.split(':')[0] || "Exploring your taste..."}
+              </Text>
+              <Text style={styles.profileDesc}>
+                "{tasteProfile.split(':')[1]?.trim() || "Order more to let AI define your palate."}"
+              </Text>
             </View>
-            <Text style={styles.menuText}>{item.title}</Text>
-            <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" />
-          </TouchableOpacity>
-        ))}
+          )}
+        </Animated.View>
 
-        <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={handleLogout}>
-          <View style={styles.logoutIcon}>
-            <FontAwesome6 name="arrow-right-from-bracket" size={18} color="#EF4444" />
-          </View>
-          <Text style={[styles.menuText, { color: '#EF4444' }]}>Log Out</Text>
-        </TouchableOpacity>
+        <View style={styles.menuList}>
+          {menuItems.map((item, idx) => (
+            <TouchableOpacity 
+              key={idx} 
+              style={styles.menuItem}
+              onPress={() => navigation.navigate(item.route)}
+            >
+              <View style={[styles.iconWrapper, { backgroundColor: item.color + '20' }]}>
+                <FontAwesome6 name={item.icon} size={18} color={item.color} />
+              </View>
+              <Text style={styles.menuText}>{item.title}</Text>
+              <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" />
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={handleLogout}>
+            <View style={styles.logoutIcon}>
+              <FontAwesome6 name="arrow-right-from-bracket" size={18} color="#EF4444" />
+            </View>
+            <Text style={[styles.menuText, { color: '#EF4444' }]}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Replicated Mobile Tab Bar for consistency */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home')}><FontAwesome6 name="house" size={20} color="#9CA3AF" /></TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Favorites')}><FontAwesome6 name="heart" size={20} color="#9CA3AF" /></TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Orders')}><FontAwesome6 name="receipt" size={20} color="#9CA3AF" /></TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Account')}><FontAwesome6 name="user" size={20} color="#F97316" /></TouchableOpacity>
       </View>
-    </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  profileHeader: { alignItems: 'center', paddingVertical: 60, backgroundColor: 'white' },
-  // Fixed borderWeight to borderWidth
+  scrollContent: { paddingBottom: 100 },
+  profileHeader: { alignItems: 'center', paddingVertical: 40, backgroundColor: 'white', borderBottomLeftRadius: 40, borderBottomRightRadius: 40 },
   avatar: { width: 110, height: 110, borderRadius: 40, borderWidth: 4, borderColor: '#F3F4F6' },
   userName: { fontSize: 26, fontWeight: '900', color: '#111827', marginTop: 15 },
   userEmail: { fontSize: 14, color: '#9CA3AF', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
@@ -114,12 +129,14 @@ const styles = StyleSheet.create({
   aiHeaderText: { color: '#F97316', fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
   profileTitle: { color: 'white', fontSize: 22, fontWeight: '900', marginBottom: 10 },
   profileDesc: { color: '#D1D5DB', fontSize: 14, fontStyle: 'italic', lineHeight: 22, fontWeight: '500' },
-  menuList: { paddingHorizontal: 25, paddingBottom: 50 },
+  menuList: { paddingHorizontal: 25 },
   menuItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 20, borderRadius: 25, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   iconWrapper: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   menuText: { flex: 1, fontSize: 16, fontWeight: '800', color: '#374151' },
   logoutItem: { marginTop: 10, borderColor: '#FEE2E2', borderWidth: 1 },
-  logoutIcon: { width: 48, height: 48, backgroundColor: '#FEF2F2', borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 }
+  logoutIcon: { width: 48, height: 48, backgroundColor: '#FEF2F2', borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  tabBar: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 85, backgroundColor: '#FFFFFF', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingBottom: 20 },
+  tabItem: { padding: 10 }
 });
 
 export default Account;

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInUp, FadeInRight } from 'react-native-reanimated';
 import { MOCK_RESTAURANTS } from '../constants';
 import { useAppSelector } from '../store/hooks';
@@ -32,117 +33,125 @@ const Home = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Deliver to</Text>
-            <View style={styles.locationRow}>
-              <Text style={styles.locationText}>Home, 123 Food St.</Text>
-              <FontAwesome6 name="chevron-down" size={12} color="#F97316" />
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <View style={{ flex: 1 }}>
+        <ScrollView 
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={true} 
+          stickyHeaderIndices={[1]}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Deliver to</Text>
+              <View style={styles.locationRow}>
+                <Text style={styles.locationText}>Home, 123 Food St.</Text>
+                <FontAwesome6 name="chevron-down" size={12} color="#F97316" />
+              </View>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Account')}>
+              <Image source={{ uri: user?.avatar || 'https://i.pravatar.cc/150' }} style={styles.avatar} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Search Bar Wrapper (Sticky) */}
+          <View style={styles.searchWrapper}>
+            <View style={styles.searchBar}>
+              <FontAwesome6 name="magnifying-glass" size={16} color="#9CA3AF" />
+              <TextInput 
+                style={styles.searchInput}
+                placeholder="Search restaurants, dishes..."
+                value={searchTerm}
+                onChangeText={setSearchTerm}
+              />
             </View>
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Account')}>
-            <Image source={{ uri: user?.avatar || 'https://i.pravatar.cc/150' }} style={styles.avatar} />
-          </TouchableOpacity>
-        </View>
 
-        {/* Search Bar Wrapper (Sticky) */}
-        <View style={styles.searchWrapper}>
-          <View style={styles.searchBar}>
-            <FontAwesome6 name="magnifying-glass" size={16} color="#9CA3AF" />
-            <TextInput 
-              style={styles.searchInput}
-              placeholder="Search restaurants, dishes..."
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-            />
-          </View>
-        </View>
-
-        {/* Categories */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          contentContainerStyle={styles.categoryContainer}
-        >
-          {categories.map((cat) => (
-            <TouchableOpacity 
-              key={cat} 
-              onPress={() => setActiveCategory(cat)}
-              style={[styles.categoryBtn, activeCategory === cat && styles.categoryBtnActive]}
-            >
-              <Text style={[styles.categoryText, activeCategory === cat && styles.categoryTextActive]}>{cat}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Featured Slider */}
-        <Text style={styles.sectionTitle}>Featured Picks</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          snapToInterval={width * 0.8 + 20}
-          decelerationRate="fast"
-          contentContainerStyle={styles.featuredContainer}
-        >
-          {MOCK_RESTAURANTS.filter(r => r.featured).map((restaurant, idx) => (
-            <Animated.View key={restaurant.id} entering={FadeInRight.delay(idx * 100)}>
+          {/* Categories */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.categoryContainer}
+          >
+            {categories.map((cat) => (
               <TouchableOpacity 
-                style={styles.featuredCard}
-                onPress={() => navigation.navigate('Menu', { id: restaurant.id })}
+                key={cat} 
+                onPress={() => setActiveCategory(cat)}
+                style={[styles.categoryBtn, activeCategory === cat && styles.categoryBtnActive]}
               >
-                <Image source={{ uri: restaurant.image }} style={styles.featuredImage} />
-                <View style={styles.featuredOverlay}>
-                  <Text style={styles.featuredName}>{restaurant.name}</Text>
-                  <Text style={styles.featuredMeta}>{restaurant.cuisine} • {restaurant.deliveryTime}</Text>
-                </View>
+                <Text style={[styles.categoryText, activeCategory === cat && styles.categoryTextActive]}>{cat}</Text>
               </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
 
-        {/* Restaurant List */}
-        <Text style={styles.sectionTitle}>Explore All</Text>
-        <View style={styles.listContainer}>
-          {filtered.map((restaurant, idx) => (
-            <Animated.View key={restaurant.id} entering={FadeInUp.delay(idx * 100)}>
-              <TouchableOpacity 
-                style={styles.restaurantCard}
-                onPress={() => navigation.navigate('Menu', { id: restaurant.id })}
-              >
-                <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
-                <View style={styles.restaurantContent}>
-                  <View style={styles.restaurantHeader}>
-                    <Text style={styles.restaurantNameList}>{restaurant.name}</Text>
-                    <View style={styles.ratingBadge}>
-                      <FontAwesome6 name="star" size={10} color="#F97316" />
-                      <Text style={styles.ratingText}>{restaurant.rating}</Text>
-                    </View>
+          {/* Featured Slider */}
+          <Text style={styles.sectionTitle}>Featured Picks</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            snapToInterval={width * 0.8 + 20}
+            decelerationRate="fast"
+            contentContainerStyle={styles.featuredContainer}
+          >
+            {MOCK_RESTAURANTS.filter(r => r.featured).map((restaurant, idx) => (
+              <Animated.View key={restaurant.id} entering={FadeInRight.delay(idx * 100)}>
+                <TouchableOpacity 
+                  style={styles.featuredCard}
+                  onPress={() => navigation.navigate('Menu', { id: restaurant.id })}
+                >
+                  <Image source={{ uri: restaurant.image }} style={styles.featuredImage} />
+                  <View style={styles.featuredOverlay}>
+                    <Text style={styles.featuredName}>{restaurant.name}</Text>
+                    <Text style={styles.featuredMeta}>{restaurant.cuisine} • {restaurant.deliveryTime}</Text>
                   </View>
-                  <Text style={styles.restaurantSub}>{restaurant.cuisine} • {restaurant.deliveryTime}</Text>
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </View>
-      </ScrollView>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </ScrollView>
+
+          {/* Restaurant List */}
+          <Text style={styles.sectionTitle}>Explore All</Text>
+          <View style={styles.listContainer}>
+            {filtered.map((restaurant, idx) => (
+              <Animated.View key={restaurant.id} entering={FadeInUp.delay(idx * 100)}>
+                <TouchableOpacity 
+                  style={styles.restaurantCard}
+                  onPress={() => navigation.navigate('Menu', { id: restaurant.id })}
+                >
+                  <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
+                  <View style={styles.restaurantContent}>
+                    <View style={styles.restaurantHeader}>
+                      <Text style={styles.restaurantNameList}>{restaurant.name}</Text>
+                      <View style={styles.ratingBadge}>
+                        <FontAwesome6 name="star" size={10} color="#F97316" />
+                        <Text style={styles.ratingText}>{restaurant.rating}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.restaurantSub}>{restaurant.cuisine} • {restaurant.deliveryTime}</Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
 
       {/* Mobile Tab Bar Mock */}
       <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem}><FontAwesome6 name="house" size={20} color="#F97316" /></TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}><FontAwesome6 name="heart" size={20} color="#9CA3AF" /></TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home')}><FontAwesome6 name="house" size={20} color="#F97316" /></TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Favorites')}><FontAwesome6 name="heart" size={20} color="#9CA3AF" /></TouchableOpacity>
         <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Orders')}><FontAwesome6 name="receipt" size={20} color="#9CA3AF" /></TouchableOpacity>
         <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Account')}><FontAwesome6 name="user" size={20} color="#9CA3AF" /></TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 15, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  scrollContent: { paddingBottom: 110 }, // Extra padding for the bottom tab bar
+  header: { paddingHorizontal: 20, paddingBottom: 15, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   greeting: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   locationText: { fontSize: 16, fontWeight: '800', color: '#111827' },
@@ -162,7 +171,7 @@ const styles = StyleSheet.create({
   featuredOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(0,0,0,0.3)' },
   featuredName: { color: '#FFFFFF', fontSize: 20, fontWeight: '900' },
   featuredMeta: { color: '#E5E7EB', fontSize: 12, fontWeight: '600' },
-  listContainer: { paddingHorizontal: 20, paddingBottom: 100 },
+  listContainer: { paddingHorizontal: 20 },
   restaurantCard: { marginBottom: 20, backgroundColor: '#FFFFFF', borderRadius: 25, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
   restaurantImage: { width: '100%', height: 180 },
   restaurantContent: { padding: 15 },
