@@ -96,12 +96,13 @@ const Register: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <div style={styles.footer}>
+          {/* Fixed: replaced div with View for React Native compatibility */}
+          <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <Text style={styles.linkText}>Log in</Text>
             </TouchableOpacity>
-          </div>
+          </View>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>

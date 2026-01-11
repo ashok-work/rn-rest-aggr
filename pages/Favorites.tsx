@@ -1,89 +1,115 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image, 
+  Dimensions 
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome6 } from '@expo/vector-icons';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useAppSelector } from '../store/hooks';
 import { MOCK_RESTAURANTS } from '../constants';
 import FavoriteButton from '../components/FavoriteButton';
 
-const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
-  return (
-    <div className="flex items-center space-x-0.5">
-      <i className="fas fa-star text-orange-500 text-[10px]"></i>
-      <span className="ml-1 text-[10px] font-black text-gray-900">{rating.toFixed(1)}</span>
-    </div>
-  );
-};
+const { width } = Dimensions.get('window');
 
-const Favorites: React.FC = () => {
+const StarRating = ({ rating }: { rating: number }) => (
+  <View style={styles.ratingBox}>
+    <FontAwesome6 name="star" size={10} color="#F97316" />
+    <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+  </View>
+);
+
+const Favorites = () => {
+  const navigation = useNavigation<any>();
   const favoriteIds = useAppSelector((state) => state.favorites.favoriteIds);
   const favoriteRestaurants = MOCK_RESTAURANTS.filter(r => favoriteIds.includes(r.id));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-10 py-10">
-      <div className="flex items-center justify-between mb-10">
-        <h1 className="text-3xl font-black text-gray-900 flex items-center">
-          <i className="fas fa-heart text-red-500 mr-4"></i>
-          My Favorites
-        </h1>
-        <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-          {favoriteRestaurants.length} saved
-        </div>
-      </div>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <FontAwesome6 name="arrow-left" size={18} color="#111827" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Favorites</Text>
+        <View style={styles.countBadge}>
+          <Text style={styles.countText}>{favoriteRestaurants.length}</Text>
+        </View>
+      </View>
 
-      {favoriteRestaurants.length === 0 ? (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center py-32 bg-white rounded-[3rem] shadow-sm border-2 border-dashed border-gray-100"
-        >
-          <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-red-200">
-            <i className="far fa-heart text-4xl"></i>
-          </div>
-          <h3 className="text-2xl font-black text-gray-900 mb-2">No favorites yet</h3>
-          <p className="text-gray-400 max-w-sm mx-auto font-medium">
-            Save restaurants you love by tapping the heart icon on their profile.
-          </p>
-          <Link 
-            to="/"
-            className="mt-8 inline-block px-8 py-3 bg-orange-600 text-white font-bold rounded-2xl hover:bg-orange-700 transition shadow-lg shadow-orange-200"
-          >
-            Explore Restaurants
-          </Link>
-        </motion.div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-          {favoriteRestaurants.map((restaurant, idx) => (
-            <motion.div
-              key={restaurant.id}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: idx * 0.05 }}
-              className="group"
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {favoriteRestaurants.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIcon}>
+              <FontAwesome6 name="heart" size={40} color="#FEE2E2" />
+            </View>
+            <Text style={styles.emptyTitle}>No favorites yet</Text>
+            <Text style={styles.emptySubtitle}>Tap the heart icon on any restaurant to save it here for later.</Text>
+            <TouchableOpacity 
+              style={styles.exploreBtn}
+              onPress={() => navigation.navigate('Home')}
             >
-              <Link to={`/restaurant/${restaurant.id}`} className="block">
-                <div className="relative aspect-[16/11] rounded-[2.5rem] overflow-hidden mb-5 shadow-lg group-hover:shadow-2xl transition-all">
-                  <img src={restaurant.image} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                  
-                  <div className="absolute top-5 left-5 z-20">
-                    <FavoriteButton restaurantId={restaurant.id} />
-                  </div>
-
-                  <div className="absolute top-5 right-5 bg-white/95 px-3 py-2 rounded-2xl shadow-xl">
+              <Text style={styles.exploreBtnText}>Explore Restaurants</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.grid}>
+            {favoriteRestaurants.map((restaurant, idx) => (
+              <Animated.View 
+                key={restaurant.id}
+                entering={FadeInUp.delay(idx * 100)}
+                style={styles.cardWrapper}
+              >
+                <TouchableOpacity 
+                  onPress={() => navigation.navigate('Menu', { id: restaurant.id })}
+                >
+                  <View style={styles.imageContainer}>
+                    <Image source={{ uri: restaurant.image }} style={styles.image} />
+                    <View style={styles.favBtnWrapper}>
+                      <FavoriteButton restaurantId={restaurant.id} size="sm" />
+                    </View>
                     <StarRating rating={restaurant.rating} />
-                  </div>
-                </div>
-                <h3 className="text-xl font-black text-gray-900 group-hover:text-orange-600 transition-colors">
-                  {restaurant.name}
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">{restaurant.cuisine}</p>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </div>
+                  </View>
+                  <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                  <Text style={styles.restaurantCuisine}>{restaurant.cuisine}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white' },
+  backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: '#111827', flex: 1 },
+  countBadge: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#F3F4F6', borderRadius: 10 },
+  countText: { fontSize: 12, fontWeight: '900', color: '#6B7280' },
+  scrollContent: { padding: 15 },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 100, paddingHorizontal: 30 },
+  emptyIcon: { width: 80, height: 80, backgroundColor: '#FEF2F2', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 25 },
+  emptyTitle: { fontSize: 24, fontWeight: '900', color: '#111827', marginBottom: 10 },
+  emptySubtitle: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', lineHeight: 22, fontWeight: '500', marginBottom: 30 },
+  exploreBtn: { backgroundColor: '#F97316', paddingHorizontal: 30, paddingVertical: 18, borderRadius: 20, shadowColor: '#F97316', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 15 },
+  exploreBtnText: { color: 'white', fontWeight: '900', fontSize: 16 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 15 },
+  cardWrapper: { width: (width - 45) / 2, marginBottom: 20 },
+  imageContainer: { width: '100%', aspectRatio: 1, borderRadius: 25, overflow: 'hidden', backgroundColor: '#E5E7EB', position: 'relative' },
+  image: { width: '100%', height: '100%' },
+  favBtnWrapper: { position: 'absolute', top: 10, left: 10 },
+  ratingBox: { position: 'absolute', top: 10, right: 10, backgroundColor: 'white', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ratingText: { fontSize: 10, fontWeight: '900', color: '#111827' },
+  restaurantName: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 12 },
+  restaurantCuisine: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', marginTop: 2 }
+});
 
 export default Favorites;

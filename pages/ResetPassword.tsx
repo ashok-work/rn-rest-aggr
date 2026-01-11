@@ -1,61 +1,138 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform,
+  ScrollView,
+  Alert
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome6 } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
-const ResetPassword: React.FC = () => {
+const ResetPassword = () => {
   const [pass, setPass] = useState('');
   const [confirm, setConfirm] = useState('');
-  const navigate = useNavigate();
+  const navigation = useNavigation<any>();
 
-  const handleReset = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleReset = () => {
+    if (!pass || !confirm) return;
     if (pass === confirm) {
-      alert("Password reset successfully!");
-      navigate('/login');
+      Alert.alert("Success", "Password reset successfully!");
+      navigation.navigate('Login');
     } else {
-      alert("Passwords do not match");
+      Alert.alert("Error", "Passwords do not match");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="max-w-md w-full bg-white p-10 rounded-3xl shadow-xl"
-      >
-        <h1 className="text-3xl font-black text-gray-900 mb-6 text-center">New Password</h1>
-        <form onSubmit={handleReset} className="space-y-6">
-          <div>
-            <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-widest">New Password</label>
-            <input 
-              type="password" 
-              required
-              className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none"
-              value={pass}
-              onChange={e => setPass(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-widest">Confirm Password</label>
-            <input 
-              type="password" 
-              required
-              className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-          <button type="submit" className="w-full py-4 bg-orange-600 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-orange-700 transition">
-            Update Password
-          </button>
-        </form>
-      </motion.div>
-    </div>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Animated.View entering={FadeInDown.duration(600)} style={styles.card}>
+          <View style={styles.header}>
+            <View style={styles.iconContainer}>
+              <FontAwesome6 name="shield-halved" size={24} color="white" />
+            </View>
+            <Text style={styles.title}>New Password</Text>
+            <Text style={styles.subtitle}>Secure your account with a new pass</Text>
+          </View>
+
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>New Password</Text>
+              <View style={styles.inputWrapper}>
+                <FontAwesome6 name="lock" size={14} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput 
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  value={pass}
+                  onChangeText={setPass}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.inputWrapper}>
+                <FontAwesome6 name="lock" size={14} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput 
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  value={confirm}
+                  onChangeText={setConfirm}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.button} onPress={handleReset}>
+              <Text style={styles.buttonText}>Update Password</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 35,
+    padding: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  header: { alignItems: 'center', marginBottom: 35 },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#F97316',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: { fontSize: 26, fontWeight: '900', color: '#111827', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: '#9CA3AF', fontWeight: '500' },
+  form: { gap: 20 },
+  inputGroup: { gap: 8 },
+  label: { fontSize: 11, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 18,
+    paddingHorizontal: 15,
+    height: 55,
+  },
+  inputIcon: { marginRight: 12 },
+  input: { flex: 1, color: '#111827', fontSize: 15, fontWeight: '600' },
+  button: {
+    backgroundColor: '#F97316',
+    height: 60,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  buttonText: { color: 'white', fontSize: 18, fontWeight: '900' },
+});
 
 export default ResetPassword;

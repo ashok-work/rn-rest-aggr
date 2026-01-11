@@ -1,15 +1,28 @@
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Modal, 
+  TextInput,
+  Alert 
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome6 } from '@expo/vector-icons';
+// Fixed: replaced non-existent ScaleInCenter with ZoomIn
+import Animated, { FadeInUp, FadeIn, ZoomIn } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addAddress, updateAddress, deleteAddress } from '../store/slices/addressSlice';
 import { Address } from '../types';
 
-const Addresses: React.FC = () => {
+const Addresses = () => {
   const dispatch = useAppDispatch();
   const addresses = useAppSelector((state) => state.addresses.addresses);
-  const navigate = useNavigate();
+  const navigation = useNavigation<any>();
+  
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState<Omit<Address, 'id'>>({
@@ -31,7 +44,7 @@ const Addresses: React.FC = () => {
 
   const handleSave = () => {
     if (!formData.fullAddress || !formData.phone) {
-      alert("Please fill in all fields");
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
@@ -47,121 +60,170 @@ const Addresses: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 md:px-10 py-12">
-      <div className="flex items-center justify-between mb-10">
-        <button onClick={() => navigate('/account')} className="text-gray-400 hover:text-orange-600 transition-colors">
-          <i className="fas fa-arrow-left mr-2"></i> Back
-        </button>
-        <h1 className="text-2xl font-black">My Addresses</h1>
-        <button 
-          onClick={() => { setIsAdding(true); setEditingId(null); setFormData({ label: 'Home', fullAddress: '', phone: '', isDefault: false }); }}
-          className="bg-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-orange-700 transition"
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <FontAwesome6 name="arrow-left" size={18} color="#111827" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>My Addresses</Text>
+        <TouchableOpacity 
+          onPress={() => { setIsAdding(true); setEditingId(null); setFormData({ label: 'Home', fullAddress: '', phone: '', isDefault: false }); }}
+          style={styles.addBtn}
         >
-          <i className="fas fa-plus"></i>
-        </button>
-      </div>
+          <FontAwesome6 name="plus" size={16} color="white" />
+        </TouchableOpacity>
+      </View>
 
-      <div className="space-y-6">
-        {addresses.map((addr) => (
-          <motion.div 
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {addresses.map((addr, idx) => (
+          <Animated.View 
             key={addr.id}
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-start justify-between group"
+            entering={FadeInUp.delay(idx * 100)}
+            style={styles.addressCard}
           >
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-orange-600">
-                <i className={`fas ${addr.label.toLowerCase() === 'home' ? 'fa-home' : addr.label.toLowerCase() === 'work' ? 'fa-briefcase' : 'fa-map-marker-alt'}`}></i>
-              </div>
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="font-bold text-gray-900">{addr.label}</h3>
-                  {addr.isDefault && <span className="text-[10px] font-black uppercase text-green-600 bg-green-50 px-2 py-0.5 rounded">Default</span>}
-                </div>
-                <p className="text-sm text-gray-600 mb-1">{addr.fullAddress}</p>
-                <p className="text-xs text-gray-400 font-medium">{addr.phone}</p>
-              </div>
-            </div>
-            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => handleOpenEdit(addr)} className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition">
-                <i className="fas fa-edit text-xs"></i>
-              </button>
-              <button onClick={() => dispatch(deleteAddress(addr.id))} className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-red-600 transition">
-                <i className="fas fa-trash text-xs"></i>
-              </button>
-            </div>
-          </motion.div>
+            <View style={styles.cardIcon}>
+              <FontAwesome6 
+                name={addr.label.toLowerCase() === 'home' ? 'house' : addr.label.toLowerCase() === 'work' ? 'briefcase' : 'location-dot'} 
+                size={18} 
+                color="#F97316" 
+              />
+            </View>
+            <View style={styles.cardInfo}>
+              <View style={styles.labelRow}>
+                <Text style={styles.addressLabelName}>{addr.label}</Text>
+                {addr.isDefault && (
+                  <View style={styles.defaultBadge}>
+                    <Text style={styles.defaultText}>Default</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.addressText}>{addr.fullAddress}</Text>
+              <Text style={styles.phoneText}>{addr.phone}</Text>
+            </View>
+            <View style={styles.cardActions}>
+              <TouchableOpacity onPress={() => handleOpenEdit(addr)} style={styles.actionBtn}>
+                <FontAwesome6 name="pen" size={12} color="#9CA3AF" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => dispatch(deleteAddress(addr.id))} style={styles.actionBtn}>
+                <FontAwesome6 name="trash" size={12} color="#EF4444" />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
         ))}
 
         {addresses.length === 0 && (
-          <div className="text-center py-10 bg-white rounded-3xl border-2 border-dashed border-gray-100">
-            <p className="text-gray-400">No saved addresses.</p>
-          </div>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No saved addresses.</Text>
+          </View>
         )}
-      </div>
+      </ScrollView>
 
-      <AnimatePresence>
-        {(isAdding || editingId) && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setIsAdding(false); setEditingId(null); }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
-              <h2 className="text-xl font-black mb-6">{editingId ? 'Edit Address' : 'New Address'}</h2>
-              <div className="space-y-4 mb-8">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-widest">Label</label>
-                  <div className="flex space-x-2">
-                    {['Home', 'Work', 'Other'].map(l => (
-                      <button 
-                        key={l}
-                        onClick={() => setFormData({ ...formData, label: l })}
-                        className={`flex-1 py-3 rounded-xl border-2 font-bold text-sm transition ${formData.label === l ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-50 bg-gray-50 text-gray-500'}`}
-                      >
-                        {l}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-widest">Full Address</label>
-                  <textarea 
-                    className="w-full p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none text-gray-700 h-24"
-                    placeholder="Enter street, apartment, city..."
-                    value={formData.fullAddress}
-                    onChange={(e) => setFormData({ ...formData, fullAddress: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-widest">Phone Number</label>
-                  <input 
-                    type="tel"
-                    className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="+1 234 567 890"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-                <div className="flex items-center space-x-3">
-                  <input 
-                    type="checkbox" 
-                    id="default-check"
-                    checked={formData.isDefault}
-                    onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                    className="w-5 h-5 accent-orange-600 rounded"
-                  />
-                  <label htmlFor="default-check" className="text-sm font-bold text-gray-700">Set as default address</label>
-                </div>
-              </div>
-              <div className="flex space-x-4">
-                 <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-2xl">Cancel</button>
-                 <button onClick={handleSave} className="flex-1 py-4 bg-orange-600 text-white font-bold rounded-2xl shadow-lg shadow-orange-200">Save Address</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Add/Edit Modal */}
+      <Modal visible={isAdding || !!editingId} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          {/* Fixed: replaced non-existent ScaleInCenter with ZoomIn */}
+          <Animated.View entering={ZoomIn} style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{editingId ? 'Edit Address' : 'New Address'}</Text>
+            
+            <View style={styles.modalForm}>
+              <Text style={styles.inputLabel}>Label</Text>
+              <View style={styles.chipRow}>
+                {['Home', 'Work', 'Other'].map(l => (
+                  <TouchableOpacity 
+                    key={l}
+                    onPress={() => setFormData({ ...formData, label: l })}
+                    style={[styles.chip, formData.label === l && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, formData.label === l && styles.chipTextActive]}>{l}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>Full Address</Text>
+              <TextInput 
+                style={[styles.input, styles.textArea]}
+                placeholder="Enter street, apartment, city..."
+                multiline
+                value={formData.fullAddress}
+                onChangeText={t => setFormData({ ...formData, fullAddress: t })}
+              />
+
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <TextInput 
+                style={styles.input}
+                placeholder="+1 234 567 890"
+                keyboardType="phone-pad"
+                value={formData.phone}
+                onChangeText={t => setFormData({ ...formData, phone: t })}
+              />
+
+              <TouchableOpacity 
+                style={styles.checkboxRow}
+                onPress={() => setFormData({ ...formData, isDefault: !formData.isDefault })}
+              >
+                <View style={[styles.checkbox, formData.isDefault && styles.checkboxActive]}>
+                  {formData.isDefault && <FontAwesome6 name="check" size={10} color="white" />}
+                </View>
+                <Text style={styles.checkboxLabel}>Set as default address</Text>
+              </TouchableOpacity>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity onPress={() => { setIsAdding(false); setEditingId(null); }} style={styles.modalCancel}>
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleSave} style={styles.modalSave}>
+                  <Text style={styles.modalSaveText}>Save Address</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', justifyContent: 'space-between' },
+  backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: '#111827' },
+  addBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F97316', justifyContent: 'center', alignItems: 'center' },
+  scrollContent: { padding: 20 },
+  addressCard: { backgroundColor: 'white', borderRadius: 25, padding: 20, flexDirection: 'row', alignItems: 'center', marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  cardIcon: { width: 48, height: 48, backgroundColor: '#F9FAFB', borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  cardInfo: { flex: 1 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  addressLabelName: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  defaultBadge: { backgroundColor: '#F0FDF4', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  defaultText: { fontSize: 8, fontWeight: '900', color: '#22C55E', textTransform: 'uppercase' },
+  addressText: { fontSize: 13, color: '#6B7280', fontWeight: '500', marginBottom: 2 },
+  phoneText: { fontSize: 11, color: '#9CA3AF', fontWeight: '700' },
+  cardActions: { gap: 8 },
+  actionBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center' },
+  emptyContainer: { padding: 40, alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: '#E5E7EB', borderRadius: 25 },
+  emptyText: { color: '#9CA3AF', fontWeight: '600' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: 'white', borderRadius: 35, padding: 30 },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: '#111827', marginBottom: 25 },
+  modalForm: { gap: 15 },
+  inputLabel: { fontSize: 11, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 },
+  chipRow: { flexDirection: 'row', gap: 10, marginBottom: 5 },
+  chip: { flex: 1, height: 45, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#F3F4F6' },
+  chipActive: { backgroundColor: '#FFF7ED', borderColor: '#F97316' },
+  chipText: { fontSize: 14, fontWeight: '700', color: '#6B7280' },
+  chipTextActive: { color: '#F97316' },
+  input: { backgroundColor: '#F3F4F6', borderRadius: 15, paddingHorizontal: 20, height: 55, fontSize: 14, fontWeight: '600' },
+  textArea: { height: 100, textAlignVertical: 'top', paddingTop: 15 },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 10 },
+  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#D1D5DB', justifyContent: 'center', alignItems: 'center' },
+  checkboxActive: { backgroundColor: '#F97316', borderColor: '#F97316' },
+  checkboxLabel: { fontSize: 14, fontWeight: '700', color: '#4B5563' },
+  modalActions: { flexDirection: 'row', gap: 15, marginTop: 10 },
+  modalCancel: { flex: 1, height: 55, borderRadius: 15, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  modalCancelText: { fontWeight: '800', color: '#6B7280' },
+  modalSave: { flex: 1, height: 55, borderRadius: 15, backgroundColor: '#F97316', justifyContent: 'center', alignItems: 'center' },
+  modalSaveText: { fontWeight: '900', color: 'white' }
+});
 
 export default Addresses;
